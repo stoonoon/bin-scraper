@@ -7,12 +7,18 @@ import dateparser
 import calendar
 import pickle
 
+# Set to True to get fresh results from web, 
+# or False to read from pickle file
+# (no need to keep reloading data while testing 
+# data formatting options)
+DATA_SOURCE_IS_WEB = True
+
 # This should be filled in for first run
 POSTCODE =""
 
 # This part is just the first way I thought of to anonymise my postcode... 
 # totally unnecessary for this to function
-
+POSTCODE_FILENAME="postcode.pickle"
 if POSTCODE == "" :
     # Load postcode from pickle file
     with open(POSTCODE_FILENAME, 'rb') as handle:
@@ -22,9 +28,7 @@ else:
     with open(POSTCODE_FILENAME, 'wb') as handle:
         pickle.dump(POSTCODE, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-# Set to True to get fresh results from web, 
-# or False to read from pickle file
-DATA_SOURCE_IS_WEB = False
+
 FILENAME = 'data-backup.pickle'
 
 if DATA_SOURCE_IS_WEB: # Get data from website
