@@ -11,7 +11,7 @@ import pickle
 # or False to read from pickle file
 # (no need to keep reloading data while testing 
 # data formatting options)
-DATA_SOURCE_IS_WEB = True
+DATA_SOURCE_IS_WEB = False
 
 # This should be filled in for first run
 POSTCODE =""
