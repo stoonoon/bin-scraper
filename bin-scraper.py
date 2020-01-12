@@ -6,6 +6,8 @@ import datetime
 import dateparser
 import calendar
 import pickle
+import json
+from pprint import pprint
 
 # Set to True to get fresh results from web, 
 # or False to read from pickle file
@@ -137,3 +139,26 @@ for binday in consolidated_list:
     date_str = binday[0].strftime("%a, %d %b")
     bins_str = ", ".join(binday[1])
     print(date_str + " : " + bins_str)
+
+# Convert date to text strings ready for export
+for binday in consolidated_list:
+    binday[0] = binday[0].strftime("%d/%m/%Y")
+
+# json stringify
+json_consolidated_list = json.dumps(consolidated_list)
+
+
+with open('bin_list.json', 'w') as f:
+    json.dump(json_consolidated_list, f)
+
+# Print list
+for binday in consolidated_list:
+    #date_str = binday[0].strftime("%a, %d %b")
+    date_str = binday[0]
+    bins_str = ", ".join(binday[1])
+    print(date_str + " : " + bins_str)
+
+with open('bin_list.json') as json_file:
+    imported_file = json.load(json_file)
+imported_list = json.loads(imported_file)
+pprint(imported_list)
