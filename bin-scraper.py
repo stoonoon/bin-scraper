@@ -14,6 +14,7 @@ from pprint import pprint
 # (no need to keep reloading data while testing 
 # data formatting options)
 DATA_SOURCE_IS_WEB = False
+JSON_EXPORT_FILENAME = "bin_list.json"
 
 # This should be filled in for first run
 POSTCODE =""
@@ -148,7 +149,7 @@ for binday in consolidated_list:
 # json stringify
 json_export_list = json.dumps(export_list)
 
-with open('bin_list.json', 'w') as f:
+with open(JSON_EXPORT_FILENAME, 'w') as f:
     json.dump(json_export_list, f)
 
 
