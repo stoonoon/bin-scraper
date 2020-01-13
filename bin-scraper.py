@@ -134,31 +134,53 @@ for bin_date, bin_desc in binlist:
 while(consolidated_list[0][0] < datetime.date.today()):
     consolidated_list.pop(0)
 
-# Print list
-for binday in consolidated_list:
-    date_str = binday[0].strftime("%a, %d %b")
-    bins_str = ", ".join(binday[1])
-    print(date_str + " : " + bins_str)
-
 # Convert date to text strings ready for export
 for binday in consolidated_list:
     binday[0] = binday[0].strftime("%d/%m/%Y")
 
-# json stringify
-json_consolidated_list = json.dumps(consolidated_list)
+# create list of dicts for easier json parsing later
+export_list = []
+for binday in consolidated_list:
+    day_dict = {'date': binday[0], 'bins': binday[1]}
+    export_list.append(day_dict)
 
+
+# json stringify
+json_export_list = json.dumps(export_list)
 
 with open('bin_list.json', 'w') as f:
-    json.dump(json_consolidated_list, f)
+    json.dump(json_export_list, f)
 
-# Print list
-for binday in consolidated_list:
-    #date_str = binday[0].strftime("%a, %d %b")
-    date_str = binday[0]
-    bins_str = ", ".join(binday[1])
-    print(date_str + " : " + bins_str)
 
-with open('bin_list.json') as json_file:
-    imported_file = json.load(json_file)
-imported_list = json.loads(imported_file)
-pprint(imported_list)
+def print_list_of_dicts(list_of_dicts):
+    print("")
+    for bin_dict in list_of_dicts:
+        print(f"Date: {bin_dict['date']}") 
+        print("Bins:")
+        for bin_type in bin_dict['bins']:
+            print(f"   --- {bin_type}")
+    print("")
+
+def test_reimport():
+    print("")
+    print("List of dicts (before exporting to json):")
+    print_list_of_dicts(export_list)
+
+    print("json string (before saving to disk)")
+    print(json_export_list)
+
+    with open('bin_list.json') as json_file:
+        imported_file = json.load(json_file)
+
+    print("")
+    print("json string (as read back from disk)")
+    print(imported_file)
+    print("")
+
+    imported_list = json.loads(imported_file)
+
+    print("List of dicts (after importing back from json)")
+    print_list_of_dicts(imported_list)
+
+# Uncomment this to enable test printouts
+# test_reimport()
