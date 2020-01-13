@@ -14,7 +14,7 @@ import json
 # or False to read from pickle file
 # (no need to keep reloading data while testing
 # data formatting options)
-DATA_SOURCE_IS_WEB = False
+DATA_SOURCE_IS_WEB = True
 JSON_EXPORT_FILENAME = "bin_list.json"
 
 # This should be filled in for first run
@@ -52,8 +52,8 @@ if DATA_SOURCE_IS_WEB:  # Get data from website
     driver = webdriver.Chrome(options=my_options)
 
     # Get the website
-    driver.get('https://ilambassadorformsprod.azurewebsites.net\
-        /wastecollectiondays/index')
+    driver.get('https://ilambassadorformsprod.azurewebsites'
+                '.net/wastecollectiondays/index')
 
     # Find the postcode field and fill it in
     postcode_field = driver.find_element_by_id('Postcode')
