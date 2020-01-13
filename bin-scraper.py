@@ -4,25 +4,26 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
 import datetime
 import dateparser
-import calendar
 import pickle
 import json
-from pprint import pprint
 
-# Set to True to get fresh results from web, 
+# import calendar
+# from pprint import pprint
+
+# Set to True to get fresh results from web,
 # or False to read from pickle file
-# (no need to keep reloading data while testing 
+# (no need to keep reloading data while testing
 # data formatting options)
 DATA_SOURCE_IS_WEB = False
 JSON_EXPORT_FILENAME = "bin_list.json"
 
 # This should be filled in for first run
-POSTCODE =""
+POSTCODE = ""
 
-# This part is just the first way I thought of to anonymise my postcode... 
+# This part is just the first way I thought of to anonymise my postcode...
 # totally unnecessary for this to function
-POSTCODE_FILENAME="postcode.pickle"
-if POSTCODE == "" :
+POSTCODE_FILENAME = "postcode.pickle"
+if POSTCODE == "":
     # Load postcode from pickle file
     with open(POSTCODE_FILENAME, 'rb') as handle:
         POSTCODE = pickle.load(handle)
@@ -34,7 +35,7 @@ else:
 
 FILENAME = 'data-backup.pickle'
 
-if DATA_SOURCE_IS_WEB: # Get data from website
+if DATA_SOURCE_IS_WEB:  # Get data from website
     # Set up webdriver options
     my_options = Options()
 
@@ -42,7 +43,8 @@ if DATA_SOURCE_IS_WEB: # Get data from website
     my_options.add_experimental_option("prefs", {
         "profile.default_content_setting_values.notifications": 1
     })
-    my_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    my_options.add_experimental_option("excludeSwitches",
+                                       ["enable-automation"])
     my_options.add_experimental_option('useAutomationExtension', False)
 
     # Create webdriver instance using chromedriver
@@ -50,7 +52,8 @@ if DATA_SOURCE_IS_WEB: # Get data from website
     driver = webdriver.Chrome(options=my_options)
 
     # Get the website
-    driver.get('https://ilambassadorformsprod.azurewebsites.net/wastecollectiondays/index')
+    driver.get('https://ilambassadorformsprod.azurewebsites.net\
+        /wastecollectiondays/index')
 
     # Find the postcode field and fill it in
     postcode_field = driver.find_element_by_id('Postcode')
@@ -67,7 +70,7 @@ if DATA_SOURCE_IS_WEB: # Get data from website
     # Find address dropdown and select second item in list
     # (no need to identify exact address for my particular
     # postcode as all addresses have the same collection day)
-    address_chooser_elem= driver.find_element_by_id("Uprn")
+    address_chooser_elem = driver.find_element_by_id("Uprn")
     address_chooser = Select(address_chooser_elem)
     address_chooser.select_by_index(1)
 
@@ -84,15 +87,16 @@ if DATA_SOURCE_IS_WEB: # Get data from website
     for day in days:
         # Find the 'a' tag for each collection day text
         a = day.find_element_by_tag_name('a')
-        
+
         # Parse the datetext attribute into date format
-        bin_datetime=dateparser.parse(a.get_attribute("data-original-datetext"))
+        bin_datetime = dateparser.parse(a.get_attribute
+                                        ("data-original-datetext"))
         bin_date = bin_datetime.date()
 
         # Get collection details string
-        bin_desc=a.get_attribute("data-original-title")
+        bin_desc = a.get_attribute("data-original-title")
 
-        #append tuple of date and bins to our binlist
+        # Append tuple of date and bins to our binlist
         binlist.append((bin_date, bin_desc))
 
     # Close driver as we don't need it any more
@@ -102,7 +106,7 @@ if DATA_SOURCE_IS_WEB: # Get data from website
     with open(FILENAME, 'wb') as handle:
         pickle.dump(binlist, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-else: # Read data from pickle file
+else:  # Read data from pickle file
     with open(FILENAME, 'rb') as handle:
         binlist = pickle.load(handle)
 
@@ -112,22 +116,21 @@ consolidated_list = []
 # Iterate over source list
 for bin_date, bin_desc in binlist:
     # To keep track of whether we have found date in destination list
-    date_already_found=False
+    date_already_found = False
 
     # check if destination list is empty
     if len(consolidated_list) > 0:
         # Iterate over destination list
         for consolidated_entry in consolidated_list:
             # Check if source date matches destination date
-            if consolidated_entry[0]==bin_date:
-                # Set this as true so we don't create a new separate entry later
-                date_already_found=True
+            if consolidated_entry[0] == bin_date:
+                # Set as true so we don't create a new separate entry later
+                date_already_found = True
                 # Append source description to destination description list
                 consolidated_entry[1].append(bin_desc)
-                
-    
+
     # Check if we have already appended this entry to an existing one
-    if date_already_found==False:
+    if date_already_found is False:
         # Then we need to add a new entry
         consolidated_list.append([bin_date, [bin_desc]])
 
@@ -156,11 +159,12 @@ with open(JSON_EXPORT_FILENAME, 'w') as f:
 def print_list_of_dicts(list_of_dicts):
     print("")
     for bin_dict in list_of_dicts:
-        print(f"Date: {bin_dict['date']}") 
+        print(f"Date: {bin_dict['date']}")
         print("Bins:")
         for bin_type in bin_dict['bins']:
             print(f"   --- {bin_type}")
     print("")
+
 
 def test_reimport():
     print("")
