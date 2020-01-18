@@ -169,6 +169,10 @@ for bin_date, bin_desc in binlist:
 while(consolidated_list[0][0] < datetime.date.today()):
     consolidated_list.pop(0)
 
+# Trim event 5 and beyond
+while(len(consolidated_list) > 5):
+    consolidated_list.pop()
+
 # Create list of dicts for easier json parsing later
 export_list = []
 
@@ -210,10 +214,12 @@ for binday in consolidated_list:
         for bin in binday:
             bin = bin[0:19]
 
-    day_dict = {'date': binday[0], 'bins': binday[1]}
-    export_list.append(day_dict)
+    if "Garden" not in binday[1][0]:
+        day_dict = {'date': binday[0], 'bins': binday[1]}
 
-    export_dict = {"bindates": export_list}
+        export_list.append(day_dict)
+
+        export_dict = {"bindates": export_list}
 
 # json stringify
 json_export_list = json.dumps(export_dict)
