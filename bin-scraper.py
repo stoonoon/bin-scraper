@@ -6,23 +6,28 @@ import datetime
 import dateparser
 import pickle
 import json
+import os
 
 # import calendar
 # from pprint import pprint
+
+# os.environ['DISPLAY'] = ':0.0'
+os.environ['DISPLAY'] = ':0'
+
 
 # Set to True to get fresh results from web,
 # or False to read from pickle file
 # (no need to keep reloading data while testing
 # data formatting options)
 DATA_SOURCE_IS_WEB = True
-JSON_EXPORT_FILENAME = "bin_list.json"
+JSON_EXPORT_FILENAME = "/home/pi/code/bin-scraper/bin_list.json"
 
 # This should be filled in for first run
 POSTCODE = ""
 
 # This part is just the first way I thought of to anonymise my postcode...
 # totally unnecessary for this to function
-POSTCODE_FILENAME = "postcode.pickle"
+POSTCODE_FILENAME = "/home/pi/code/bin-scraper/postcode.pickle"
 if POSTCODE == "":
     # Load postcode from pickle file
     with open(POSTCODE_FILENAME, 'rb') as handle:
@@ -33,7 +38,7 @@ else:
         pickle.dump(POSTCODE, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-FILENAME = 'data-backup.pickle'
+DATA_BACKUP_FILENAME = '/home/pi/code/bin-scraper/data-backup.pickle'
 
 if DATA_SOURCE_IS_WEB:  # Get data from website
     # Set up webdriver options
@@ -53,7 +58,7 @@ if DATA_SOURCE_IS_WEB:  # Get data from website
 
     # Get the website
     driver.get('https://ilambassadorformsprod.azurewebsites'
-                '.net/wastecollectiondays/index')
+               '.net/wastecollectiondays/index')
 
     # Find the postcode field and fill it in
     postcode_field = driver.find_element_by_id('Postcode')
@@ -103,11 +108,11 @@ if DATA_SOURCE_IS_WEB:  # Get data from website
     driver.close()
 
     # Save a copy of binlist to pickle
-    with open(FILENAME, 'wb') as handle:
+    with open(DATA_BACKUP_FILENAME, 'wb') as handle:
         pickle.dump(binlist, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 else:  # Read data from pickle file
-    with open(FILENAME, 'rb') as handle:
+    with open(DATA_BACKUP_FILENAME, 'rb') as handle:
         binlist = pickle.load(handle)
 
 # Consolidate by date
@@ -138,19 +143,54 @@ for bin_date, bin_desc in binlist:
 while(consolidated_list[0][0] < datetime.date.today()):
     consolidated_list.pop(0)
 
-# Convert date to text strings ready for export
-for binday in consolidated_list:
-    binday[0] = binday[0].strftime("%d/%m/%Y")
-
-# create list of dicts for easier json parsing later
+# Create list of dicts for easier json parsing later
 export_list = []
+
 for binday in consolidated_list:
+    bintime = datetime.time(hour=7, minute=0)
+    bin_dt = datetime.datetime.combine(binday[0], bintime)
+    date_iso = bin_dt.isoformat()
+    date_string = binday[0].strftime("%a %d/%m")  # 9 characters
+    date_dict = {'date_string': date_string, 'date_iso': date_iso}
+
+    binday[0] = date_dict
+    binlen = len(binday[1])
+    if binlen == 1:
+        # only one collection this date
+        desc = binday[1].pop()
+        if "Household" in desc:
+            binday[1] = ["Household"]
+        elif "blue lidded" in desc:
+            binday[1] = ["Recycling", "    Wheelie Bin Only"]
+        elif "Black box" in desc:
+            binday[1] = ["Recycling", "      Black box Only"]
+        elif "garden" in desc:
+            binday[1] = ["Garden"]
+        else:
+            #  unknown description - flag error with truncated desc
+            binday[1] = ["ParseError", desc[0:19]]
+    elif binlen == 2:
+        # two collections - prob recycling, poss something non-std
+        desc0 = binday[1].pop()
+        desc1 = binday[1].pop()
+        concat_desc = desc0+desc1
+        if ("blue lid" in concat_desc) and ("Black box" in concat_desc):
+            binday[1] = ["Recycling"]
+        else:
+            binday[1] = ["NONSTDERR2", desc0[0:19], desc1[0:19]]
+    elif binlen > 2:
+        # more than 2 collections - def something weird
+        binday[1].insert(0, ("NONSTDERR" + binlen))
+        for bin in binday:
+            bin = bin[0:19]
+
     day_dict = {'date': binday[0], 'bins': binday[1]}
     export_list.append(day_dict)
 
+    export_dict = {"bindates": export_list}
 
 # json stringify
-json_export_list = json.dumps(export_list)
+json_export_list = json.dumps(export_dict)
 
 with open(JSON_EXPORT_FILENAME, 'w') as f:
     json.dump(json_export_list, f)
