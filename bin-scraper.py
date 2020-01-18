@@ -53,7 +53,7 @@ if DATA_SOURCE_IS_WEB:  # Get data from website
 
     # Get the website
     driver.get('https://ilambassadorformsprod.azurewebsites'
-                '.net/wastecollectiondays/index')
+               '.net/wastecollectiondays/index')
 
     # Find the postcode field and fill it in
     postcode_field = driver.find_element_by_id('Postcode')
@@ -77,11 +77,37 @@ if DATA_SOURCE_IS_WEB:  # Get data from website
     # Wait a while for calendar to populate
     time.sleep(5)
 
+    # Create list to hold our data
+    binlist = []
+
     # Find elements corresponding to collection days
     days = driver.find_elements_by_class_name("rc-event-container")
 
-    # Create list to hold our data
-    binlist = []
+    # Iterate over each found element
+    for day in days:
+        # Find the 'a' tag for each collection day text
+        a = day.find_element_by_tag_name('a')
+
+        # Parse the datetext attribute into date format
+        bin_datetime = dateparser.parse(a.get_attribute
+                                        ("data-original-datetext"))
+        bin_date = bin_datetime.date()
+
+        # Get collection details string
+        bin_desc = a.get_attribute("data-original-title")
+
+        # Append tuple of date and bins to our binlist
+        binlist.append((bin_date, bin_desc))
+
+    # Find the "Next month" button and click it
+    rc_next_btn = driver.find_element_by_class_name('rc-next')
+    rc_next_btn.click()
+
+    # Wait a while for next calendar month to populate
+    time.sleep(5)
+
+    # Find elements corresponding to collection days
+    days = driver.find_elements_by_class_name("rc-event-container")
 
     # Iterate over each found element
     for day in days:
